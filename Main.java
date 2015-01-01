@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.*;
 
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.*;
 import org.mozilla.javascript.optimizer.ClassCompiler;
 import org.mozilla.javascript.tools.SourceReader;
 import org.mozilla.javascript.tools.ToolErrorReporter;
@@ -25,7 +25,7 @@ public class Main {
      * Then set up the execution environment and begin to
      * compile scripts.
      */
-    public static void main(String args[])
+   /* public static void main(String args[])
     {
         Main main = new Main();
         args = main.processOptions(args);
@@ -40,8 +40,66 @@ public class Main {
         if (!main.reporter.hasReportedError()) {
             main.processSource(args);
         }
+    }*/
+	
+	public static void main(String args[])
+    {
+        Main main = new Main();
+        String filename = "F:/各種資料/test.js";
+        File f = new File(filename);
+        String source = main.readSource(f);
+        Parser p = new Parser(main.compilerEnv);
+        Node ast = p.parse(source, filename, 1);
+        Node child = ast.getFirstChild();
+        while(child != null) {
+        	if(child.getType() == Token.FUNCTION) {
+        		FunctionNode fnode = (FunctionNode)child;
+        		//get function name
+        		System.out.println(fnode.getName());
+        		//move to function body 
+        		AstNode fbody = fnode.getBody();
+        		Node fc = fbody.getFirstChild();
+        		while(fc != null) {
+        			System.out.println(Token.typeToName(fc.getType()));
+        			//get while body
+        			if(fc.getType() == Token.WHILE) {
+        				WhileLoop wl = (WhileLoop)fc;
+        				AstNode condition = wl.getCondition();
+        				AstNode left = ((InfixExpression)condition).getLeft();
+        				String operator = Token.typeToName(((InfixExpression)condition).getOperator());
+        				AstNode right = ((InfixExpression)condition).getRight();
+        				System.out.println(((Name)left).getIdentifier());
+        				System.out.println(operator);
+        				System.out.println(((NumberLiteral)right).getNumber());
+        				Node wlbody = wl.getBody().getFirstChild();
+        				System.out.println(Token.typeToName(wlbody.getType()));
+        				AstNode exp = ((ExpressionStatement)wlbody).getExpression();
+        				left = ((InfixExpression)exp).getLeft();
+        				right = ((InfixExpression)exp).getRight();
+        				System.out.print(((Name)left).getIdentifier());
+        				operator = Token.typeToName(((InfixExpression)exp).getOperator());
+        				System.out.print(operator);
+        				if(right instanceof InfixExpression) {
+        					left = ((InfixExpression)right).getLeft();
+        					operator = Token.typeToName(((InfixExpression)right).getOperator());
+            				right = ((InfixExpression)right).getRight();
+            				System.out.print(((Name)left).getIdentifier());
+            				System.out.print(operator);
+            				System.out.print(((NumberLiteral)right).getNumber());
+            				System.out.println();
+        				}
+        			}
+        			//get returnName test
+        			if(fc.getType() == Token.RETURN) {
+        				AstNode rex = ((ReturnStatement)fc).getReturnValue();
+        				System.out.println(((Name)rex).getIdentifier());
+        			}
+        			fc = fc.getNext();
+        		}		
+        	}
+        	child = child.getNext();
+        }
     }
-
     public Main()
     {
         reporter = new ToolErrorReporter(true);
@@ -283,7 +341,7 @@ public class Main {
     }
 
 
-    private String readSource(File f)
+    public String readSource(File f)
     {
         String absPath = f.getAbsolutePath();
         if (!f.isFile()) {
