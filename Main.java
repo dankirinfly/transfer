@@ -25,24 +25,17 @@ public class Main {
      * Then set up the execution environment and begin to
      * compile scripts.
      */
-   /* public static void main(String args[])
+    public static void main(String args[])
     {
         Main main = new Main();
-        args = main.processOptions(args);
-        if (args == null) {
-            if (main.printHelp) {
-                System.out.println(ToolErrorReporter.getMessage(
-                    "msg.jsc.usage", Main.class.getName()));
-                System.exit(0);
-            }
-            System.exit(1);
-        }
+        String filename[] = {"F:/各種資料/benchmark.js"};
+        
         if (!main.reporter.hasReportedError()) {
-            main.processSource(args);
+            main.processSource(filename);
         }
-    }*/
+    }
 	
-	public static void main(String args[])
+	/*public static void main(String args[])
     {
         Main main = new Main();
         String filename = "F:/各種資料/test.js";
@@ -89,6 +82,10 @@ public class Main {
             				System.out.println();
         				}
         			}
+        			if(fc.getType() == Token.BLOCK) {
+        				
+        				System.out.println("block");
+        			}
         			//get returnName test
         			if(fc.getType() == Token.RETURN) {
         				AstNode rex = ((ReturnStatement)fc).getReturnValue();
@@ -100,6 +97,7 @@ public class Main {
         	child = child.getNext();
         }
     }
+    */
     public Main()
     {
         reporter = new ToolErrorReporter(true);
@@ -289,21 +287,13 @@ public class Main {
             String source = readSource(f);
             if (source == null) return;
 
-            String mainClassName = targetName;
-            String nojs = null;
-            if (mainClassName == null) {
-                String name = f.getName();
-                nojs = name.substring(0, name.length() - 3);
-                mainClassName = getClassName(nojs);
-            }
-            if (targetPackage.length() != 0) {
-                mainClassName = targetPackage+"."+mainClassName;
-            }
+            
             
             Parser p = new Parser(compilerEnv);
             Node ast = p.parse(source, filename, 1);
-            FlowTransfer cont = new FlowTransfer(compilerEnv);
-            List<AstNode> result = cont.NodeTransfer(ast);
+            FlowTransformer ftf = new FlowTransformer(compilerEnv);
+            List<AstNode> result = ftf.NodeTransformer(ast);
+           
             
             String encodedSource;
 
@@ -316,17 +306,19 @@ public class Main {
                     targetTopDir = new File(parent);
                 }
             }
-            String newFileName = nojs + "Thread.js";
+            String newFileName = "testThread.js";
                 File outfile = getOutputFile(targetTopDir, newFileName);
                 try {
                     FileOutputStream os = new FileOutputStream(outfile);
                     OutputStreamWriter osw = new OutputStreamWriter(os);
-                    BufferedWriter bw = new BufferedWriter(osw);
+                    bw = new BufferedWriter(osw);
 
                     try {
                     	for(int j=0;j<result.size();j++){
                     		encodedSource = result.get(j).toSource();
                     		bw.write(encodedSource);
+                    		bw.newLine();
+                    		
                     	}
                     } finally {
                     	bw.close();
@@ -339,8 +331,89 @@ public class Main {
             
         }
     }
-
-
+    BufferedWriter bw;
+   public void printNodeChildren(AstNode root) throws IOException {    
+	   if(root.getType() == Token.FUNCTION) {
+			String Name = ((FunctionNode) root).getName();
+			List<AstNode> args = ((FunctionNode) root).getParams();
+			bw.write("function " + Name + "(");
+			for(int i = 0;i < args.size();i++) {
+				bw.write(args.get(i).toSource());
+				if(i < args.size() - 1)
+					bw.write(",");
+			}
+			bw.write(") {\r\n");
+			
+			AstNode fbody = ((FunctionNode)root).getBody();
+			Node child = fbody.getFirstChild();
+			while(child != null) {
+				printNodeChildren((AstNode)child);
+				child = child.getNext();
+				if(child != null)
+					child = child.getNext();
+			}
+			bw.write("}");
+			bw.newLine();
+		}
+		else if(root.getType() == Token.IF) {
+			AstNode ifbody = ((IfStatement)root).getThenPart();
+			Node child = ifbody.getFirstChild();
+			while(child != null) {
+				printNodeChildren((AstNode)child);
+				child = child.getNext();
+			}
+			ifbody = ((IfStatement)root).getElsePart();
+			if(ifbody != null) {
+				child = ifbody.getFirstChild();
+				while(child != null) {
+					printNodeChildren((AstNode)child);
+					child = child.getNext();
+				}
+			}
+		}
+		
+		else {
+			bw.write(root.toSource());
+			bw.newLine();
+			
+			
+		}
+    }
+   
+   /*if(root.getType() == Token.FUNCTION) {
+    		AstNode fbody = ((FunctionNode)root).getBody();
+    		Node child = fbody.getFirstChild();
+    		while(child != null) {
+    			child = printNodeChildren((AstNode)child);
+    			child = child.getNext();
+    			if(child != null)
+    				child = child.getNext();
+    		}
+    	}
+    	else if(root.getType() == Token.IF) {
+    		AstNode ifbody = ((IfStatement)root).getThenPart();
+    		Node child = ifbody.getFirstChild();
+    		while(child != null) {
+    			child = printNodeChildren((AstNode)child);
+    			child = child.getNext();
+    		}
+    		ifbody = ((IfStatement)root).getElsePart();
+    		if(ifbody != null) {
+    			child = ifbody.getFirstChild();
+    			while(child != null) {
+    				child = printNodeChildren((AstNode)child);
+    				child = child.getNext();
+    			}
+    		}
+    	}
+    	
+    	else {
+    		Name enter = new Name();
+    		enter.setIdentifier("\r\n");
+    		root.addChildToBack((Node)enter);
+    		
+    	}
+    	return root;*/
     public String readSource(File f)
     {
         String absPath = f.getAbsolutePath();
@@ -427,4 +500,3 @@ public class Main {
     private String destinationDir;
     private String characterEncoding;
 }
-
