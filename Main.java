@@ -28,7 +28,7 @@ public class Main {
     public static void main(String args[])
     {
         Main main = new Main();
-        String filename[] = {"F:/各種資料/benchmark.js"};
+        String filename[] = {"F:/奺庬帒椏/benchmark.js"};
         
         if (!main.reporter.hasReportedError()) {
             main.processSource(filename);
@@ -38,7 +38,7 @@ public class Main {
 	/*public static void main(String args[])
     {
         Main main = new Main();
-        String filename = "F:/各種資料/test.js";
+        String filename = "F:/奺庬帒椏/test.js";
         File f = new File(filename);
         String source = main.readSource(f);
         Parser p = new Parser(main.compilerEnv);
