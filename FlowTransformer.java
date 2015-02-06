@@ -139,7 +139,7 @@ public class FlowTransformer {
     	ue.setOperator(Token.COMMA);
     	return ue;
     }
-    //遍历加换行符
+    //閬嶅巻鍔犳崲琛岀
     public void insertEnter(List<AstNode> result) {
     	for(int i = 0;i < result.size();i++) {
     		if(result.get(i).hasChildren()) {
@@ -207,7 +207,7 @@ public class FlowTransformer {
     	List<AstNode> result = new ArrayList<AstNode>();
     	//List<AstNode> args = new ArrayList<AstNode>();
     	AstNode es = ((ExpressionStatement)sn).getExpression();
-    	//代入なら
+    	//浠ｅ叆銇倝
     	if(es instanceof Assignment) {
     		result = transformAssignment(es);
     		for(int i = 0;i < result.size();i++) {
@@ -226,7 +226,7 @@ public class FlowTransformer {
         	AstNode whileloop = CreateWhileLoop(trycatch,ife);
         	fbody.addChildBefore(whileloop,sn);*/
     	}
-    	//関数呼出しなら
+    	//闁㈡暟鍛煎嚭銇椼仾銈�
     	else if(es instanceof FunctionCall) {		
     		result = transformFunctionCall(es);
     		for(int i = 0;i < result.size();i++) {
